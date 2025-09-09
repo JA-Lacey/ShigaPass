@@ -41,7 +41,7 @@ Run ShigaPass without option to read the following documentation:
 
 > [!NOTE]  
 >When you use ShigaPass for the first time, you need to **initialise the internal databases**.  
->This is done with the `-u` (update) flag, which **must be run together with a full command** (input + output).  
+>This is done with the `-u` (update) flag, which **must be run together with a full command**.  
 >For example:  
 >```
 >ShigaPass.sh -l examples/example_list.txt -o results/ -p ShigaPass/ShigaPass_DataBases -u
@@ -118,3 +118,4 @@ If you use **ShigaPass** in your research or analysis pipeline, please cite:
 |-------------------------------|------|
 |[ShigaPass ](https://www.microbiologyresearch.org/content/journal/mgen/10.1099/mgen.0.000961)|![doi](https://img.shields.io/badge/DOI-https://doi.org/10.1099/mgen.0.001280-blue)|  
 |[BLAST+ ](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-10-421)|![doi](https://img.shields.io/badge/DOI-https://doi.org/10.1099/mgen.0.001280-blue)|
+
