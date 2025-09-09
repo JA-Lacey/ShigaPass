@@ -3,7 +3,7 @@
 ShigaPass is a new *in silico* tool used to predict *Shigella* serotypes and to differentiate between *Shigella*, EIEC (Enteroinvasive *E. coli*), and non *Shigella*/EIEC using assembled whole genomes.
 
 ## Dependencies
- ShigaPass is a command line tool written in Bash version 4.4.20 and requires Blast+ version 2.12.0 to run. 
+ ShigaPass is a command-line tool written in **Bash (v4.4.20)** and requires **awk** and **BLAST+ (v2.12.0)**.   
  - BLAST+ can be installed using the following command line (for Ubuntu users) : sudo apt-get install ncbi-blast+ 
  - For more information on how to install Blast+, please refer to https://www.ncbi.nlm.nih.gov/books/NBK279690/
 
@@ -39,23 +39,36 @@ Run ShigaPass without option to read the following documentation:
         Please note that the -u option should be used when running the script for the first time and after databases updates
 ````
 
+> [!NOTE]  
+>When you use ShigaPass for the first time, you need to **initialise the internal databases**.  
+>This is done with the `-u` (update) flag, which **must be run together with a full command** (input + output).  
+>For example:  
+>```
+>ShigaPass.sh -l examples/example_list.txt -o results/ -p ShigaPass/ShigaPass_DataBases -u
+>```
+>This will:
+ >- Build/update the required databases.
+>- Run ShigaPass on the example dataset.
+>
+>⚠️ Running **ShigaPass.sh -u** *alone* is not sufficient — the update step is only triggered when combined with a full run. Once the databases are initialised, you can run ShigaPass normally without -u.
+>You will need to run with -u again if you update ShigaPass or any of its databases.
 
-
-## Example
-- The Fasta sequence files are available in the directory Example/Input
+## Quick Start Example
+Example FASTA sequence files are provided in `Example/Input`.  
 
    * Please unzip the sequences (using gunzip) before running ShigaPass
-
-- All output files are available in the directory Example/ShigaPass_Results
-
-
+### Input File
+Create a list file containing the paths to the FASTA files. You can use `readlink` or `ls`.  For example: 
+   ```bash
+   readlink -e *.fasta > ShigaPass_test.txt
+  ```
 **Running ShigaPass**
 
-Create a list file containing the paths to the FASTA files then run ShigaPass
-``` 
-ShigaPass.sh -l ShigaPass_test.txt -o ShigaPass_Results -p ShigaPass_DataBases -u -k
 ```
-
+ ShigaPass.sh -l ShigaPass_test.txt -o ShigaPass_Results -p ShigaPass_DataBases -u -k
+```
+- All output files are available in the directory `Example/ShigaPass_Results`
+  
 Here's an example of ShigaPass summary file
 |Name |rfb|rfb_hits,(%)|MLST|fliC|CRISPR|ipaH|Predicted_Serotype|Predicted_FlexSerotype|Comments|
 | :------------- |:-------------|:---------------- |:-------------|:-------------|:-------------|:-------------|:-------------|:-------------|:-------------| 
@@ -97,3 +110,11 @@ wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR598/006/ERR5982186/ERR5982186_1.fastq
 wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR598/006/ERR5982186/ERR5982186_2.fastq.gz
 ```
 All reads were filtered with FqCleanER version 3.0 (https://gitlab.pasteur.fr/GIPhy/fqCleanER) with options -q 15 -l 50 
+
+## Citation
+
+If you use **ShigaPass** in your research or analysis pipeline, please cite:
+|**Publication**|**DOI**|
+|-------------------------------|------|
+|[ShigaPass ](https://www.microbiologyresearch.org/content/journal/mgen/10.1099/mgen.0.000961)|![doi](https://img.shields.io/badge/DOI-https://doi.org/10.1099/mgen.0.001280-blue)|  
+|[BLAST+ ](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-10-421)|![doi](https://img.shields.io/badge/DOI-https://doi.org/10.1099/mgen.0.001280-blue)|
