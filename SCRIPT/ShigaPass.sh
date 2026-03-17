@@ -24,7 +24,7 @@ usage() {
 }
 
 version () {
-        echo "ShigaPass version 1.5.0"
+        echo "ShigaPass version 1.6.0"
 }
 
 MKDB=0 
