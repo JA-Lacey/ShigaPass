@@ -8,10 +8,16 @@ ShigaPass is a new *in silico* tool used to predict *Shigella* serotypes and to 
  - For more information on how to install Blast+, please refer to https://www.ncbi.nlm.nih.gov/books/NBK279690/
 
 ## Installation
-**1.** Clone this repository with the following command line:
+**1.** Clone this repository version 1.6 with the following command line:
+```
+git clone https://github.com/JA-Lacey/ShigaPass.git
+```
+
+**1.** Alternative to clone the original repository but it will be version 1.5:
 ```
 git clone https://github.com/imanyass/ShigaPass.git
 ```
+
 **2.** Give the execute permission to the file ShigaPass.sh:
 ```
 chmod +x ShigaPass.sh
