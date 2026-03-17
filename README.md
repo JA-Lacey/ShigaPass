@@ -22,22 +22,30 @@ chmod +x ShigaPass.sh
 ```
 ## Usage 
 Run ShigaPass without option to read the following documentation:
-````
+`````
 ###### This tool is used to predict Shigella serotypes  #####
         Usage : ShigaPass.sh [options]
    
         options :
-        -l	List of input file(s) (FASTA) with their path(s) (mandatory)
+        -l	List of input file(s) with 2 columns: Strain_ID and path_to_contigs (FASTA) (mandatory)
         -o	Output directory (mandatory)
         -p	Path to databases directory (mandatory)
         -t	Number of threads (optional, default: 2)
+        -j	Number of parallel jobs (optional, default: 1 for sequential processing)
         -u	Call the makeblastdb utility for databases initialisation (optional, but required when running the script for the first time)
         -k	Do not remove subdirectories (optional)
        	-v	Display the version and exit
         -h	Display this help and exit
-        Example: ShigaPass.sh -l list_of_fasta.txt -o ShigaPass_Results -p ShigaPass/ShigaPass_DataBases -t 4 -u -k
+        Example: ShigaPass.sh -l strain_list.txt -o ShigaPass_Results -p ShigaPass/ShigaPass_DataBases -t 4 -j 4 -u -k
         Please note that the -u option should be used when running the script for the first time and after databases updates
-````
+        Input file format: Two columns separated by tab or space: <Strain_ID> <path_to_contigs>
+`````
+
+**Parallel Processing:**
+ShigaPass now supports parallel processing for faster analysis of multiple samples. Use the `-j` option to specify the number of samples to process simultaneously:
+- `-j 1` (default): Sequential processing
+- `-j 4`: Process 4 samples in parallel
+- For optimal performance: `threads × jobs ≤ your CPU cores`
 
 > [!NOTE]  
 >When you use ShigaPass for the first time, you need to **initialise the internal databases**.  
@@ -82,10 +90,12 @@ Here's an example of ShigaPass summary file
 SB: *S. boydii*; SD: *S. dysenteriae*; SF: *S. flexneri*; SS: *S. sonnei*
 
 ### Output Files
-* In the output directory, two files will be written:
-  1. ShigaPass_summary.csv: semicolon-delimited file with one row per genome inclinding the sample name; type of *rfb*; number of *rfb* hits, (% of *rfb* coverage); MLST profile; type of *fliC*; CRISPR spacers; the presence of *ipaH*; the predicted serotype and *S. flexneri* subserotype; comments to show the number of *rfb* when more than one is detected 
-  2. ShigaPass_Flex_summary.csv: semicolon-delimited file detailing the phage and plasmid-encoded O-antigen modification (POAC) genes detected for the predicted *S. flexneri* genomes
- * In case -k option is used, a directory will be created for every assembled genome and will contain the following files:
+* In the output directory, the following files will be created:
+  1. **ShigaPass_YYYYMMDD_HHMMSS.log**: Main log file with timestamped analysis progress
+  2. **ShigaPass_summary.csv**: semicolon-delimited file with one row per genome including the sample name; type of *rfb*; number of *rfb* hits, (% of *rfb* coverage); MLST profile; type of *fliC*; CRISPR spacers; the presence of *ipaH*; the predicted serotype and *S. flexneri* subserotype; comments to show the number of *rfb* when more than one is detected 
+  3. **ShigaPass_Flex_summary.csv**: semicolon-delimited file detailing the phage and plasmid-encoded O-antigen modification (POAC) genes detected for the predicted *S. flexneri* genomes
+  4. **logs/** directory: Contains individual log files for each sample (useful for parallel processing and troubleshooting)
+* In case -k option is used, a directory will be created for every assembled genome and will contain the following files:
  
 | Extension       | Description |
 | :------------- |:-------------| 
