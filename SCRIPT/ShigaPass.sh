@@ -10,7 +10,7 @@ usage() {
         echo "Usage : ShigaPass.sh [options]"
         echo
         echo "options :"
-        echo "-l	List of input file(s) (FASTA) with their path(s) (mandatory)"
+        echo "-l	List of input file(s) with 2 columns: Strain_ID and path_to_contigs (FASTA) (mandatory)"
         echo "-o	Output directory (mandatory)"
         echo "-p	Path to databases directory (mandatory)"
 	echo "-t	Number of threads (optional, default: 2)" 
@@ -18,8 +18,9 @@ usage() {
 	echo "-k	Do not remove subdirectories (optional)"
 	echo "-v	Display the version and exit"
         echo "-h	Display this help and exit"
-        echo "Example: ShigaPass.sh -l list_of_fasta.txt -o ShigaPass_Results -p ShigaPass/ShigaPass_DataBases -t 4 -u -k"
+        echo "Example: ShigaPass.sh -l strain_list.txt -o ShigaPass_Results -p ShigaPass/ShigaPass_DataBases -t 4 -u -k"
         echo "Please note that the -u option should be used when running the script for the first time and after databases updates"
+        echo "Input file format: Two columns separated by tab or space: <Strain_ID> <path_to_contigs>"
 }
 
 version () {
@@ -113,9 +114,20 @@ then
 fi
 
 
-for y in $(cat ${LIST})
+while read -r strain_id y || [[ -n "$strain_id" ]]
 do
-        echo ${y}
+        # Skip empty lines and lines starting with #
+        [[ -z "$strain_id" || "$strain_id" =~ ^[[:space:]]*# ]] && continue
+        
+        # If only one field is provided, treat it as the old format (path only)
+        if [[ -z "$y" ]]; then
+            y="$strain_id"
+            # Extract strain ID from filename for backward compatibility
+            FastaFile=${y##*/}
+            strain_id=${FastaFile%%.*}
+        fi
+        
+        echo "Processing strain: $strain_id from file: ${y}"
         RFB=""
         MLST=""
         FLIC=""
@@ -136,7 +148,7 @@ do
 	RFB_coverage=""
 	ipaH_coverage=""
 
-    	NAMEDIR=$(basename $y .fasta)
+    	NAMEDIR=${strain_id}
         if [ ! -d ${OUTDIR}/${NAMEDIR} ]
         then
                 mkdir ${OUTDIR}/${NAMEDIR}
@@ -274,8 +286,8 @@ do
 			done
 		echo $FLEXSEROTYPE
 		phages=$(sort -k 1 -t ";" ${OUTDIR}/${NAMEDIR}/POAC_hits.txt |cut -f 1 -d ";" |awk 'BEGIN { ORS = ";" } { print }' )
-		#echo "$FastaName;$phages;$FLEXSEROTYPE" | sed 's/;;/;/g' | tee -a ${OUTDIR}/ShigaPass_Flex_summary_${date}.csv
-		echo "$FastaName;$phages;$FLEXSEROTYPE" | sed 's/;;/;/g' | tee -a ${OUTDIR}/ShigaPass_Flex_summary.csv
+		#echo "$strain_id;$phages;$FLEXSEROTYPE" | sed 's/;;/;/g' | tee -a ${OUTDIR}/ShigaPass_Flex_summary_${date}.csv
+		echo "$strain_id;$phages;$FLEXSEROTYPE" | sed 's/;;/;/g' | tee -a ${OUTDIR}/ShigaPass_Flex_summary.csv
 		elif [[  -z "$RFB"  || "$RFB" == "" ]] # if no rfb hit is detected, search for the presence of SS rfb
 		then
 			BLAST_awk RFB/RFB_serogroup_D_150-mers.fasta additionalrfb 100 100
@@ -337,9 +349,9 @@ do
 		-v AWK_fumC="$(grep fumC $MOFILE |cut -f 2 -d ":" )" \
 		-v AWK_gyrB="$(grep gyrB $MOFILE |cut -f 2 -d ":" )" \
 		-v AWK_icd="$(grep icd $MOFILE |cut -f 2 -d ":" )" \
-		-v AWK_mdh="$(grep mdh $MOFILE |cut -f 2 -d ":" )" \
-		-v AWK_purA="$(grep purA $MOFILE |cut -f 2 -d ":" )" \
-		-v AWK_recA="$(grep recA $MOFILE |cut -f 2 -d ":" )" \
+		-v AWK_mdh="$(grep mdh $MOFILE |cut -f 2 -d : )" \
+		-v AWK_purA="$(grep purA $MOFILE |cut -f 2 -d : )" \
+		-v AWK_recA="$(grep recA $MOFILE |cut -f 2 -d : )" \
 		'{if ($2==AWK_adk && $3==AWK_fumC && $4==AWK_gyrB && $5==AWK_icd && $6==AWK_mdh && $7==AWK_purA && $8==AWK_recA) print "ST"$1}' ${DBPATHWAY}/MLST/ST_profiles.txt > ${OUTDIR}/${NAMEDIR}/mlst_ST.txt # if a line of ST databank matches every ST, we print it
 		MLST=$(cut -f 2 ${OUTDIR}/${NAMEDIR}/mlst_ST.txt | cut -f 2 -d ":")
 		[[ ! -z "$MLST" ]] || MLST="none" # if there is no match at this point, we assume that there is definetely no match
@@ -414,7 +426,7 @@ do
 #FastaFile=${y##*/}
 #FastaName=${FastaFile%%.*}
 #echo "$FastaName;$RFB;$hit,($(printf '%.*f\n' 1 ${RFB_coverage})%);$MLST;$FLIC;$CRISPR;$ipaH;$SEROTYPE;$FLEXSEROTYPE;$comments" | tee -a ${OUTDIR}/ShigaPass_summary_${date}.csv
-echo "$FastaName;$RFB;$hit,($(printf '%.*f\n' 1 ${RFB_coverage})%);$MLST;$FLIC;$CRISPR;$ipaH;$SEROTYPE;$FLEXSEROTYPE;$comments"| tee -a ${OUTDIR}/ShigaPass_summary.csv
+echo "$strain_id;$RFB;$hit,($(printf '%.*f\n' 1 ${RFB_coverage})%);$MLST;$FLIC;$CRISPR;$ipaH;$SEROTYPE;$FLEXSEROTYPE;$comments"| tee -a ${OUTDIR}/ShigaPass_summary.csv
 rm ${f}
 
 if [ $KEEP = 0 ]  # Delete subdirectories
@@ -423,7 +435,7 @@ then
 fi
 
 
-done 
+done < ${LIST}
  
 
 trap : 0
