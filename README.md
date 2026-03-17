@@ -17,7 +17,6 @@ git clone https://github.com/JA-Lacey/ShigaPass.git
 ```
 git clone https://github.com/imanyass/ShigaPass.git
 ```
-
 **2.** Give the execute permission to the file ShigaPass.sh:
 ```
 chmod +x ShigaPass.sh

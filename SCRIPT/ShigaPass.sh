@@ -116,6 +116,9 @@ BLAST_OPT="-num_threads ${THREADS} -num_alignments 10000 -outfmt 6 -word_size 11
 #echo "Name;rfb;rfb_hits,(%);MLST;fliC;CRISPR;ipaH;Predicted_Serotype;Predicted_FlexSerotype;Comments" > ${OUTDIR}/ShigaPass_summary_${date}.csv
 echo "Name;rfb;rfb_hits,(%);MLST;fliC;CRISPR;ipaH;Predicted_Serotype;Predicted_FlexSerotype;Comments" > ${OUTDIR}/ShigaPass_summary.csv 2>/dev/null
 
+# Create simplified summary file header
+echo "Name;Predicted_Species;MLST;Predicted_Serotype;Predicted_FlexSerotype" > ${OUTDIR}/ShigaPass_simple_summary.csv 2>/dev/null
+
 BLAST_awk () {
 blastn -db ${DBPATHWAY}/$1 -query ${f} -out ${OUTDIR}/${NAMEDIR}/$2_blastout.txt -num_threads ${THREADS} -num_alignments 10000 -outfmt 6 -word_size 11 -dust no 2>/dev/null
 awk -v ID="$3" -v COV="$4" -F "\t|_" '{if ($6>=ID && ($7/$5)*100>=COV) print $0}' ${OUTDIR}/${NAMEDIR}/$2_blastout.txt > ${OUTDIR}/${NAMEDIR}/$2_allrecords.txt
@@ -123,6 +126,21 @@ awk -v ID="$3" -v COV="$4" -F "\t|_" '{if ($6>=ID && ($7/$5)*100>=COV) print $0}
 
 Hits_awk () {
 awk -F "\t|_" 'OFS=";"{a[$2]++;} END{for(i in a) print i,a[i]}' ${OUTDIR}/${NAMEDIR}/$1_allrecords.txt |sort -k 2 -t ";" -nr -o ${OUTDIR}/${NAMEDIR}/$1_hits.txt 2>/dev/null
+}
+
+# Function to expand species names
+expand_species_name() {
+    local serotype="$1"
+    case "$serotype" in
+        SB*) echo "Shigella boydii" ;;
+        SD*) echo "Shigella dysenteriae" ;;
+        SS*) echo "Shigella sonnei" ;;
+        SF*) echo "Shigella flexneri" ;;
+        "Not Shigella/EIEC") echo "Not Shigella/EIEC" ;;
+        "EIEC") echo "EIEC" ;;
+        "Shigella spp.") echo "Shigella spp." ;;
+        *) echo "$serotype" ;;
+    esac
 }
 
 # Function to process a single sample (for parallel execution)
@@ -452,6 +470,7 @@ process_sample() {
             (
                 flock -x 200
                 printf "%s;%s;%s,(%.1f%%);%s;%s;%s;%s;%s;%s;%s\n" "$strain_id" "$RFB" "$hit" "${RFB_coverage}" "$MLST" "$FLIC" "$CRISPR" "$ipaH" "$SEROTYPE" "$FLEXSEROTYPE" "$comments" >> ${OUTDIR}/ShigaPass_summary.csv
+                printf "%s;%s;%s;%s;%s\n" "$strain_id" "$(expand_species_name "$SEROTYPE")" "$MLST" "$SEROTYPE" "$FLEXSEROTYPE" >> ${OUTDIR}/ShigaPass_simple_summary.csv
             ) 200>${OUTDIR}/.lockfile
     fi
 
@@ -820,6 +839,7 @@ else
 #FastaName=${FastaFile%%.*}
 #log_message "$FastaName;$RFB;$hit,($(printf '%.*f\n' 1 ${RFB_coverage})%);$MLST;$FLIC;$CRISPR;$ipaH;$SEROTYPE;$FLEXSEROTYPE;$comments" | tee -a ${OUTDIR}/ShigaPass_summary_${date}.csv
 printf "%s;%s;%s,(%.1f%%);%s;%s;%s;%s;%s;%s;%s\n" "$strain_id" "$RFB" "$hit" "${RFB_coverage}" "$MLST" "$FLIC" "$CRISPR" "$ipaH" "$SEROTYPE" "$FLEXSEROTYPE" "$comments" >> ${OUTDIR}/ShigaPass_summary.csv
+printf "%s;%s;%s;%s;%s\n" "$strain_id" "$(expand_species_name "$SEROTYPE")" "$MLST" "$SEROTYPE" "$FLEXSEROTYPE" >> ${OUTDIR}/ShigaPass_simple_summary.csv
 log_message "Completed analysis for strain: $strain_id"
 rm ${f}
 
