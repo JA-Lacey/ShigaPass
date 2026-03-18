@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -e -u -o pipefail
 
 #bash GNU bash, version 4.4.20(1)-release (x86_64-redhat-linux-gnu)
 #module load blast+/2.12.0
